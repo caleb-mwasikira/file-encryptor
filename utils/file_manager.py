@@ -18,4 +18,3 @@ class FileManager:
                     dir_list.append(path.join(root, file))
 
         return dir_list
-
