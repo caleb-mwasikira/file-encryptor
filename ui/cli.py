@@ -42,7 +42,7 @@ class CLI:
                 validate=validate_password
             )
         ]
-        answers: dict = inquirer.prompt(questions)
+        answers: dict = inquirer.prompt(questions, raise_keyboard_interrupt=True)
         username, password = answers.values()
 
         return username, password
@@ -56,7 +56,7 @@ class CLI:
                 choices=['Encrypt', 'Decrypt']
             )
         ]
-        answer: dict = inquirer.prompt(qst)
+        answer: dict = inquirer.prompt(qst, raise_keyboard_interrupt=True)
 
         return answer['action']
 
@@ -80,7 +80,7 @@ class CLI:
                 normalize_to_absolute_path=True, validate=validate_dir
             )
         ]
-        answer: dict = inquirer.prompt(qst)
+        answer: dict = inquirer.prompt(qst, raise_keyboard_interrupt=True)
 
         return answer['filepath']
 
@@ -99,7 +99,7 @@ class CLI:
                 default=[]
             )
         ]
-        answer = inquirer.prompt(qst)
+        answer = inquirer.prompt(qst, raise_keyboard_interrupt=True)
         selected_files = answer['selected_files']
 
         if selected_files == default_choice:
