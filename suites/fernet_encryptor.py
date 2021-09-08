@@ -40,6 +40,11 @@ class FernetEncryptor(Encryptor):
         super().__init__(password)
 
     def encrypt_file(self, file):
+        # First check if the file we are encrypting is already encrypted/marked as encrypted
+        if self.file_is_encrypted(file):
+            print(f"[?] Cannot encrypt {file}. File already marked as encrypted")
+            return
+
         self.key, self.salt = key_derivation_func(self.password)
         cipher = Fernet(self.key)
 
@@ -67,6 +72,11 @@ class FernetEncryptor(Encryptor):
             print(f"[!] Error: {error}")
 
     def decrypt_file(self, file):
+        # First check if the file we are decrypting is already decrypted/marked as decrypted.
+        if not self.file_is_encrypted(file):
+            print(f"[?] Cannot decrypt {file}. File already marked as decrypted")
+            return
+
         new_filename: str = self.get_decrypted_filename(file)
 
         try:

@@ -1,8 +1,14 @@
+import sys
+import os
+from pathlib import Path
+
 import inquirer
-from os import path
 from inquirer import errors
 
 from utils.file_manager import FileManager
+from utils.utils import HOME_DIR
+
+sys.path.append(os.path.realpath('.'))
 
 
 class CLI:
@@ -61,34 +67,33 @@ class CLI:
         return answer['action']
 
     @staticmethod
-    def get_dir(action: str):
-        def validate_dir(_, directory):
-            files_found: list = FileManager.list_dir(directory)
+    def get_dir(action: str) -> Path:
+        def validate_dir(_, directory: str):
+            _dir = Path(directory)
 
-            if not path.exists(directory):
+            if not os.path.exists(directory):
                 raise errors.ValidationError('', reason=f"Directory {directory} does not exist")
 
-            elif len(files_found) == 0:
-                raise errors.ValidationError('', reason=f"Empty directory")
+            elif FileManager.is_empty(_dir):
+                raise errors.ValidationError('', reason="Empty directory")
 
             else:
                 return True
 
         qst = [
             inquirer.Path(
-                "filepath", message=f"Enter the directory you want to {action}",
-                normalize_to_absolute_path=True, validate=validate_dir
+                'filepath', message=f"Enter the directory you want to {action}",
+                validate=validate_dir, default=HOME_DIR.__str__()
             )
         ]
         answer: dict = inquirer.prompt(qst, raise_keyboard_interrupt=True)
-
-        return answer['filepath']
+        return Path(answer['filepath'])
 
     @staticmethod
     def select_files_in_dir(directory):
         """Gets the files the user would like to encrypt/decrypt"""
 
-        files_found: list = FileManager.list_dir(directory)
+        files_found: list = list(FileManager.list_dir(directory))
         default_choice = ['SelectAll']
 
         qst = [
