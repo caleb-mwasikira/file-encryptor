@@ -1,44 +1,57 @@
 import re
 import time
-from os import path
 from datetime import date
-from typing.io import BinaryIO
+from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import BinaryIO
 from uuid import uuid4
 from base64 import b64encode
 
+from utils.user_actions import UserActions
 
-class Encryptor:
+
+def get_new_filename(filename: str, action: UserActions = UserActions.ENCRYPT) -> str:
+    if action == UserActions.ENCRYPT:
+        new_filename: str = "(encrypted)" + filename
+
+    else:
+        pattern = re.compile(r"[(]encrypted[)]")
+        new_filename: str = re.sub(pattern, "", filename)
+
+    return new_filename
+
+
+def file_is_encrypted(filename: str) -> bool:
+    """Checks whether file is marked as encrypted or not"""
+
+    pattern = re.compile(r"[(]encrypted[)]")
+    return re.match(pattern, filename) or False
+    
+
+class Encryptor(ABC):
     def __init__(self, password: str):
         self.password = password.encode("utf-8")
         self.key = self.salt = None
 
-        self.begin_delimiter: bytes = "-----BEGIN ENCRYPTION-----".encode("utf-8")
-        self.end_delimiter: bytes = "-----END ENCRYPTION-----".encode("utf-8")
+        self.BEGIN_DELIMITER: bytes = "-----BEGIN ENCRYPTION-----".encode("utf-8")
+        self.END_DELIMITER: bytes = "-----END ENCRYPTION-----".encode("utf-8")
 
-    @staticmethod
-    def get_encrypted_filename(filename):
-        parent_dir: str = path.dirname(filename)
-        new_filename: str = "(encrypted)" + path.basename(filename)
-        return path.join(parent_dir, new_filename)
+        self.begin_pattern = re.compile(self.BEGIN_DELIMITER)
+        self.end_pattern = re.compile(self.END_DELIMITER)
 
-    @staticmethod
-    def get_decrypted_filename(filename):
-        parent_dir: str = path.dirname(filename)
-        pattern = re.compile(r"[(]encrypted[)]")
-        new_filename: str = re.sub(pattern, "", path.basename(filename))
-        return path.join(parent_dir, new_filename)
+    @abstractmethod
+    def encrypt_file(self, file: Path):
+        """"""
 
-    @staticmethod
-    def file_is_encrypted(file):
-        """Checks whether file is marked as encrypted or not"""
-
-        pattern = re.compile(r"[(]encrypted[)]")
-        return re.match(pattern, path.basename(file)) or False
+    @abstractmethod
+    def decrypt_file(self, file: Path):
+        """"""
 
     def write_encryption_header(self, file: BinaryIO):
         today = date.today()
         t = time.localtime()
         date_time: str = today.strftime("%b-%d-%Y") + " " + time.strftime("%H:%M:%S", t)
+
         new_line: bytes = "\n".encode("utf-8")
 
         encryption_header = {
@@ -48,7 +61,7 @@ class Encryptor:
             "Date-Time": date_time,
         }
 
-        file.write(self.begin_delimiter + new_line)
+        file.write(self.BEGIN_DELIMITER + new_line)
 
         for detail in list(encryption_header.items()):
             line: bytes = f"{detail[0]}: {detail[1]}".encode("utf-8")
@@ -58,16 +71,14 @@ class Encryptor:
 
     def read_encryption_header(self, file: BinaryIO) -> dict:
         encryption_header: dict = {}
-        begin_pattern = re.compile(self.begin_delimiter)
-        end_pattern = re.compile(self.end_delimiter)
 
         while True:
             line: bytes = file.readline().strip()
 
-            if not line or re.match(end_pattern, line):
+            if not line or re.match(self.end_pattern, line):
                 break
 
-            elif re.match(begin_pattern, line):
+            elif re.match(self.begin_pattern, line):
                 continue
 
             else:
@@ -90,11 +101,9 @@ class Encryptor:
             yield buffer
 
     def read_encrypted_file_in_chunks(self, file: BinaryIO):
-        end_pattern = re.compile(self.end_delimiter)
-
         while True:
-            line: bytes = file.readline().strip()
-            if not line or re.match(end_pattern, line):
+            buffer: bytes = file.readline().strip()
+            if not buffer or re.match(self.end_pattern, buffer):
                 break
 
-            yield line
+            yield buffer
