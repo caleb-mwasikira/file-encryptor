@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 import sys
 import argparse
-<<<<<<< HEAD
-from typing import Tuple
-
-from ui.command_line_interface import CommandLineInterface
-from encryptors.fernet_encryptor import FernetEncryptor
-=======
 import colorama as colors
 from pathlib import Path
 from pyfiglet import Figlet, FigletString
@@ -15,7 +9,6 @@ from typing import Tuple, List, Optional
 from ui.command_line_interface import CommandLineInterface
 from encryption.fernet_encryptor import FernetEncryptor
 from utils.user_actions import UserActions
->>>>>>> Implemented cli functionality for choosing files inside nested directories
 
 
 def get_program_args() -> Tuple[Optional[UserActions], str, List[str]]:
@@ -57,18 +50,6 @@ def start_screen(display_text: str):
     print("Welcome to the file encryptor version 1.0.0")
 
 
-<<<<<<< HEAD
-def init_program() -> Tuple[str, str, str, str]:
-    try:
-        # username, password, action, directory = "John Doe", "password", "e", "./data"
-
-        CLI = CommandLineInterface()
-        username, password = CLI.get_user_auth_info()
-        action, directory = get_program_args()
-
-        if directory is None:
-            directory = CLI.select_dir()
-=======
 def init_program() -> Tuple[str, UserActions, List[Path]]:
     try:
         start_screen("Guizzer")
@@ -91,7 +72,6 @@ def init_program() -> Tuple[str, UserActions, List[Path]]:
                     selected_files.append(filepath.absolute())
 
             # selected_files.extend([Path(file).absolute() for file in files if Path(file).exists()])
->>>>>>> Implemented cli functionality for choosing files inside nested directories
 
         # username: str = CLI.get_username()
         password: str = CLI.get_password()
